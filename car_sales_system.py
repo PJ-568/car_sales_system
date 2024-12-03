@@ -147,13 +147,14 @@ class car_sales_system(http.server.BaseHTTPRequestHandler):
                 query_params = parse_qs(query_string)
                 username = query_params.get('username', [''])[0]
                 password = query_params.get('password', [''])[0]
+                role = self.check_login(username, password)
                 # 返回请求头
                 self.send_response(200)
                 self.send_header('Content-type', 'text/html; charset=utf-8')
                 self.end_headers()
                 # 如果登录成功，则返回车辆管理页面否则报错并指引用户返回登录页面
-                if self.check_login(username, password):
-                    self.wfile.write(self.generate_vehicles_management_html(username, password))
+                if role:
+                    self.wfile.write(self.generate_vehicles_management_html(username, password, role))
                 else:
                     self.wfile.write(self.generate_error_html(200, '用户名或密码有误。'))
             # 当访问 car_sales_system.css 时，返回样式表
@@ -330,10 +331,10 @@ class car_sales_system(http.server.BaseHTTPRequestHandler):
     def check_login(self, username, password):
         conn, cursor = connect_to_database()
         # 从数据库中获取用户名和密码相对应的用户信息
-        cursor.execute("SELECT * FROM operators WHERE username=? AND password=?", (username, password))
-        user = cursor.fetchone()
+        cursor.execute("SELECT role FROM operators WHERE username=? AND password=?", (username, password))
+        role = cursor.fetchone()
         conn.close()
-        return user is not None
+        return role is not None
 
     # 检查字符串是否包含非法字符
     def check_string(self, string):
