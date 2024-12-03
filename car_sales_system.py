@@ -154,8 +154,8 @@ class car_sales_system(http.server.BaseHTTPRequestHandler):
                     self.wfile.write(self.generate_vehicles_management_html(username, password, role))
                 else:
                     self.wfile.write(self.generate_error_html(200, '用户名或密码有误。'))
-            # 当访问 main.css 时，返回样式表
-            elif self.path == '/main.css':
+            # 当访问 car_sales_system.css 时，返回样式表
+            elif self.path == '/car_sales_system.css':
                 # 返回请求头
                 self.send_response(200)
                 self.send_header('X-Content-Type-Options', 'nosniff')
@@ -197,6 +197,112 @@ class car_sales_system(http.server.BaseHTTPRequestHandler):
         except Exception as e:
             self.send_msg_error(500, f"服务器出错。<br>{e}")
 
+    # 生成数据库连接页面
+    def generate_index_html(self):
+        return '''<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <link type="text/css" rel="stylesheet" href="car_sales_system.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>数据库连接</title>
+</head>
+
+<body>
+    <div class="container">
+        <fieldset>
+            <legend>数据库连接</legend>
+            <label for="servername">服务器名:</label>
+            <input type="text" id="servername" name="servername" value="Local">
+            <br>
+            <label for="dbname">数据库名:</label>
+            <input type="text" id="dbname" name="dbname" value="汽车销售系统">
+            <br>
+            <label for="username">用户名:</label>
+            <input type="text" id="username" name="username" value="202235010623">
+            <br>
+            <label for="password">密码:</label>
+            <input type="text" id="password" name="password" value="202235010623">
+            <br>
+            <button type="submit" onclick="validateForm()">连接</button>
+            <button type="button" onclick="closeWindow()">取消</button>
+        </fieldset>
+        <script>
+            function validateForm() {
+                // 获取表单元素
+                const servername = document.getElementById('servername').value;
+                const dbname = document.getElementById('dbname').value;
+                const username = document.getElementById('username').value;
+                const password = document.getElementById('password').value;
+
+                // 验证服务器名 ,验证数据库名
+                if ((servername !== 'Local') || (dbname !== '汽车销售系统')) {
+                    setTimeout(() => {
+                        alert('无法连接');
+                    }, 1000);
+                    return;
+                }
+                // 验证用户名
+                if ((username === '202235010623' && password === '202235010623') || (username === '202235010611' && password === '202235010611')) {
+                    window.location.href = "login.html";
+                    return;
+                }
+                setTimeout(() => {
+                    alert('无法连接');
+                }, 1000);
+            }
+            function closeWindow() {
+                window.close();
+            }           
+        </script>
+    </div>
+</body>
+
+</html>'''.encode('utf-8')
+
+    # 生成汽车销售登陆系统页面
+    def generate_login_html(self):
+        return '''<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <link type="text/css" rel="stylesheet" href="car_sales_system.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>汽车销售登陆系统</title>
+</head>
+
+<body>
+    <div class="container">
+        <fieldset>
+            <legend>汽车销售登陆系统</legend>
+            <label for="username">用户名:</label>
+            <input type="text" id="username" name="username" value="202235010623">
+            <br>
+            <label for="password">密码:</label>
+            <input type="text" id="password" name="password" value="202235010623">
+            <br>
+            <button type="submit" onclick="validateForm()">登陆</button>
+            <button type="button" onclick="closeWindow()">取消</button>
+        </fieldset>
+        <script>
+            function validateForm() {
+                // 获取表单元素
+                const username = document.getElementById('username').value;
+                const password = document.getElementById('password').value;
+                //跳转到车辆管理页面
+                window.location.href = "vehicles_management.html?username=" + username + "&password=" + password;
+            }
+            function closeWindow() {
+                window.close();
+            }           
+        </script>
+    </div>
+</body>
+
+</html>'''.encode('utf-8')
+
     # 生成图标
     def generate_favicon(self):
         return '''<svg xmlns="http://www.w3.org/2000/svg" width="50" height="50"><circle cx="25" cy="25" r="20" fill="blue" /></svg>'''.encode('utf-8')
@@ -209,7 +315,7 @@ class car_sales_system(http.server.BaseHTTPRequestHandler):
     def generate_error_html(self, errorCode, errorMsg = '', buttons = "<a href='/login.html'>重新登录</a>"):
         if not errorMsg:
             errorMsg = f'错误代码：{errorCode}<br>Error code: {errorCode}'
-        return f'''<!DOCTYPE html><html lang="zh-Hans"><head><meta charset="UTF-8"><title>错误：{errorCode}</title><link type="text/css" rel="stylesheet" href="/main.css"><meta name="viewport" content="width=192, initial-scale=1.0"></head><body><div class="container"><fieldset><legend>错误：{errorCode}</legend><div class="content">{errorMsg}</div>{buttons}</fieldset></div><div class="loading-bar"><div class="progress"></div></div></body></html>'''.encode('utf-8')
+        return f'''<!DOCTYPE html><html lang="zh-Hans"><head><meta charset="UTF-8"><title>错误：{errorCode}</title><link type="text/css" rel="stylesheet" href="/car_sales_system.css"><meta name="viewport" content="width=192, initial-scale=1.0"></head><body><div class="container"><fieldset><legend>错误：{errorCode}</legend><div class="content">{errorMsg}</div>{buttons}</fieldset></div><div class="loading-bar"><div class="progress"></div></div></body></html>'''.encode('utf-8')
 
     # 生成并返回错误页面头信息和页面内容
     def send_msg_error(self, errorCode, errorMsg = '', buttons = "<a href='/login.html'>重新登录</a>"):
