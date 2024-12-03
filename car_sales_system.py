@@ -113,7 +113,6 @@ def disconnect_to_database(conn):
 
 class car_sales_system(http.server.BaseHTTPRequestHandler):
     max_cache_time = 86400  # 最大缓存时间，单位为秒
-    conn, cursor = connect_to_database()
 
     # 当客户端发送 GET 请求时
     def do_GET(self):
@@ -151,10 +150,9 @@ class car_sales_system(http.server.BaseHTTPRequestHandler):
                 # 返回请求头
                 self.send_response(200)
                 self.send_header('Content-type', 'text/html; charset=utf-8')
-                self.send_header('Cache-Control', f'public, max-age={self.max_cache_time}')
                 self.end_headers()
                 # 如果登录成功，则返回车辆管理页面否则报错并指引用户返回登录页面
-                if (self.check_login(username, password)):
+                if self.check_login(username, password):
                     self.wfile.write(self.generate_vehicles_management_html(username, password))
                 else:
                     self.wfile.write(self.generate_error_html(200, '用户名或密码有误。'))
@@ -330,9 +328,20 @@ class car_sales_system(http.server.BaseHTTPRequestHandler):
 
     # 检查登录
     def check_login(self, username, password):
-        self.cursor.execute("SELECT * FROM operators WHERE username=? AND password=?", (username, password))
-        user = self.cursor.fetchone()
+        conn, cursor = connect_to_database()
+        # 从数据库中获取用户名和密码相对应的用户信息
+        cursor.execute("SELECT * FROM operators WHERE username=? AND password=?", (username, password))
+        user = cursor.fetchone()
+        conn.close()
         return user is not None
+
+    # 检查字符串是否包含非法字符
+    def check_string(self, string):
+        # 非法字符集
+        illegal_chars = ['<', '>', '&', '"', "'", "\\"]
+        if any(char in string for char in illegal_chars):
+            return False
+        return True
 
 # 初始化网页服务器
 def initialize_server():
