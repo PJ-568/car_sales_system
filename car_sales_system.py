@@ -107,8 +107,13 @@ def connect_to_database():
     cursor = conn.cursor()
     return conn, cursor
 
+# 断开到 SQLite 数据库的连接
+def disconnect_to_database(conn):
+    conn.close()
+
 class car_sales_system(http.server.BaseHTTPRequestHandler):
     max_cache_time = 86400  # 最大缓存时间，单位为秒
+    conn, cursor = connect_to_database()
 
     # 当客户端发送 GET 请求时
     def do_GET(self):
@@ -143,7 +148,6 @@ class car_sales_system(http.server.BaseHTTPRequestHandler):
                 query_params = parse_qs(query_string)
                 username = query_params.get('username', [''])[0]
                 password = query_params.get('password', [''])[0]
-                role = query_params.get('role', [''])[0]
                 # 返回请求头
                 self.send_response(200)
                 self.send_header('Content-type', 'text/html; charset=utf-8')
@@ -151,7 +155,7 @@ class car_sales_system(http.server.BaseHTTPRequestHandler):
                 self.end_headers()
                 # 如果登录成功，则返回车辆管理页面否则报错并指引用户返回登录页面
                 if (self.check_login(username, password)):
-                    self.wfile.write(self.generate_vehicles_management_html(username, password, role))
+                    self.wfile.write(self.generate_vehicles_management_html(username, password))
                 else:
                     self.wfile.write(self.generate_error_html(200, '用户名或密码有误。'))
             # 当访问 main.css 时，返回样式表
@@ -190,7 +194,6 @@ class car_sales_system(http.server.BaseHTTPRequestHandler):
                 brand = post_data.get('brand', [''])[0]
                 transaction_type = post_data.get('transaction_type', [''])[0]
                 amount = post_data.get('amount', [''])[0]
-                date = # TODO
                 customer_name = post_data.get('customer_name', [''])[0]
             else:
                 self.send_msg_error(404, "未找到该资源。")
@@ -199,7 +202,7 @@ class car_sales_system(http.server.BaseHTTPRequestHandler):
 
     # 生成图标
     def generate_favicon(self):
-        return '''<svg xmlns="http://www.w3.org/2000/svg" width="50" height="50"><circle cx="25" cy="25" r="20" fill="blue" /></svg>'''.encode('utf-8')
+        return '''<svg xmlns="http://www.w3.org/2000/svg" width="50" height="50"><circle cx="25" cy="25" r="20" fill="green" /></svg>'''.encode('utf-8')
 
     # 生成样式表
     def generate_css(self):
@@ -209,7 +212,7 @@ class car_sales_system(http.server.BaseHTTPRequestHandler):
     def generate_error_html(self, errorCode, errorMsg = '', buttons = "<a href='/login.html'>重新登录</a>"):
         if not errorMsg:
             errorMsg = f'错误代码：{errorCode}<br>Error code: {errorCode}'
-        return f'''<!DOCTYPE html><html lang="zh-Hans"><head><meta charset="UTF-8"><title>错误：{errorCode}</title><link type="text/css" rel="stylesheet" href="/main.css"><meta name="viewport" content="width=192, initial-scale=1.0"></head><body><div class="container"><fieldset><legend>错误：{errorCode}</legend><div class="content">{errorMsg}</div>{buttons}</fieldset></div><div class="loading-bar"><div class="progress"></div></div></body></html>'''.encode('utf-8')
+        return f'''<!DOCTYPE html><html lang="zh-Hans"><head><meta charset="UTF-8"><title>错误：{errorCode}</title><link type="text/css" rel="stylesheet" href="/car_sales_system.css"><meta name="viewport" content="width=192, initial-scale=1.0"></head><body><div class="container"><fieldset><legend>错误：{errorCode}</legend><div class="content">{errorMsg}</div>{buttons}</fieldset></div><div class="loading-bar"><div class="progress"></div></div></body></html>'''.encode('utf-8')
 
     # 生成并返回错误页面头信息和页面内容
     def send_msg_error(self, errorCode, errorMsg = '', buttons = "<a href='/login.html'>重新登录</a>"):
@@ -221,9 +224,9 @@ class car_sales_system(http.server.BaseHTTPRequestHandler):
 
     # 检查登录
     def check_login(self, username, password):
-        conn, cursor = connect_to_database()
-        cursor.execute("SELECT * FROM operators WHERE username=? AND password=?", (username, password))
-        conn.close()
+        self.cursor.execute("SELECT * FROM operators WHERE username=? AND password=?", (username, password))
+        user = self.cursor.fetchone()
+        return user is not None
 
 # 初始化网页服务器
 def initialize_server():
