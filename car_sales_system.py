@@ -55,7 +55,7 @@ def initialize_database():
             id INTEGER PRIMARY KEY,
             vehicle_id INTEGER,
             transaction_type TEXT NOT NULL,
-            amount REAL,
+            amount INTEGER,
             customer_id INTEGER,
             date TEXT,
             FOREIGN KEY (vehicle_id) REFERENCES vehicles(id),
@@ -82,16 +82,16 @@ def initialize_database():
 def initialize_data():
     # 连接到 SQLite 数据库
     conn, cursor = connect_to_database()
-
-    # 插入车辆信息
-    cursor.execute("INSERT INTO vehicles (brand, model, manufacturer_id) VALUES ('BMW', 'X5', 1)")
-    cursor.execute("INSERT INTO vehicles (brand, model, manufacturer_id) VALUES ('Audi', 'A8', 2)")
-    cursor.execute("INSERT INTO vehicles (brand, model, manufacturer_id) VALUES ('Mercedes-Benz', 'C-Class', 3)")
     
     # 插入厂商信息
-    cursor.execute("INSERT INTO manufacturers (name) VALUES ('BMW')")
-    cursor.execute("INSERT INTO manufacturers (name) VALUES ('Audi')")
-    cursor.execute("INSERT INTO manufacturers (name) VALUES ('Mercedes-Benz')")
+    cursor.execute("INSERT INTO manufacturers (name) VALUES ('宝马')")
+    cursor.execute("INSERT INTO manufacturers (name) VALUES ('奥迪')")
+    cursor.execute("INSERT INTO manufacturers (name) VALUES ('梅赛德斯')")
+
+    # 插入车辆信息
+    cursor.execute("INSERT INTO vehicles (brand, model, manufacturer_id) VALUES ('宝马', 'X5', 1)")
+    cursor.execute("INSERT INTO vehicles (brand, model, manufacturer_id) VALUES ('奥迪', 'A8', 2)")
+    cursor.execute("INSERT INTO vehicles (brand, model, manufacturer_id) VALUES ('奔驰', 'C-Class', 3)")
 
     # 插入操作员信息
     cursor.execute("INSERT INTO operators (username, password, role) VALUES ('202235010623', '202235010623', 'admin')")
@@ -99,8 +99,12 @@ def initialize_data():
     cursor.execute("INSERT INTO operators (username, password, role) VALUES ('guest', 'guest', 'guest')")
 
     # 插入财务信息
-    cursor.execute("INSERT INTO financials (vehicle_id, transaction_type, amount, customer_id, date) VALUES (2, 'in', '2', 1, '2024-12-04')")
-    cursor.execute("INSERT INTO financials (vehicle_id, transaction_type, amount, customer_id, date) VALUES (3, 'out', '1', 1, '2023-01-01')")
+    cursor.execute("INSERT INTO financials (vehicle_id, transaction_type, amount, customer_id, date) VALUES (2, '买入', 2, 2, '2024-12-04')")
+    cursor.execute("INSERT INTO financials (vehicle_id, transaction_type, amount, customer_id, date) VALUES (3, '卖出', 1, 1, '2023-01-01')")
+
+    # 插入客户信息
+    cursor.execute("INSERT INTO customers (name) VALUES ('墨水厂')")
+    cursor.execute("INSERT INTO customers (name) VALUES ('莫洛托夫')")
 
     # 提交事务
     conn.commit()
@@ -325,12 +329,12 @@ class car_sales_system(http.server.BaseHTTPRequestHandler):
 <body>
     <div class="container">
         <fieldset>
-            <legend>导航</legend>
-            <a href="">……界面</a>
+            <legend>汽车管理系统</legend>
+            <a href="404.html">库存信息</a>
             <a href="login.html">退出登录</a>
         </fieldset>
         <fieldset{control}>
-            <legend>汽车管理系统：操作</legend>
+            <legend>操作</legend>
             <form id="addVehicleForm">
                 <label for="brand">车辆品牌:</label>
                 <input type="text" id="brand" required>
@@ -455,7 +459,11 @@ class car_sales_system(http.server.BaseHTTPRequestHandler):
     # 获取车辆交易信息
     def get_vehicle_transactions(self):
         conn, cursor = connect_to_database()
-        cursor.execute("SELECT * FROM financials")
+        cursor.execute('''
+            SELECT t1.brand, t1.model, t0.transaction_type, t0.amount, t2.name, t0.date 
+            FROM financials t0, vehicles t1, customers t2
+            WHERE t0.vehicle_id = t1.id AND t0.customer_id = t2.id
+        ''')
         raw = cursor.fetchall()
         financials = ''
         for i in raw:
