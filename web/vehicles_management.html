@@ -3,93 +3,58 @@
 
 <head>
     <meta charset="UTF-8">
+    <link type="text/css" rel="stylesheet" href="car_sales_system.css">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>汽车管理系统</title>
 </head>
 
 <body>
     <div class="container">
-        <h1>汽车管理系统</h1>
-        <form id="addVehicleForm">
-            <label for="brand">车辆品牌:</label>
-            <input type="text" id="brand" required>
-            <label for="model">车辆型号:</label>
-            <input type="text" id="model" required>
-            <label for="operation">操作:</label>
-            <p><input type="radio" name="operation" value="buy" required> 买入 <input type="radio" name="operation"
-                    value="sell" required> 卖出</p>
-            <label for="quantity">数量:</label>
-            <input type="number" id="quantity" required>
-            <label for="customername">客户信息:</label>
-            <input type="text" id="customername" required>
-            <button type="submit">添加</button>
-        </form>
-
-        <table id="vehicleTable">
-            <thead>
-                <tr>
-                    <th>车辆品牌</th>
-                    <th>车辆型号</th>
-                    <th>操作</th>
-                    <th>数量</th>
-                    <th>客户信息</th>
-                    <th>日期</th>
-                </tr>
-            </thead>
-            <tbody>
-                <!-- 汽车数据将在这里动态生成 -->
-            </tbody>
-        </table>
+        <a href="">……界面</a>
+        <a href="Login.html">退出登录</a>
+        <fieldset>
+            <legend>汽车管理系统：操作</legend>
+            <form id="addVehicleForm">
+                <label for="brand">车辆品牌:</label>
+                <input type="text" id="brand" required>
+                <br>
+                <label for="model">车辆型号:</label>
+                <input type="text" id="model" required>
+                <br>
+                <label for="operation">操作:</label>
+                <input type="radio" name="operation" value="buy" required> 买入 <input type="radio" name="operation"
+                    value="sell" required> 卖出
+                <br>
+                <label for="quantity">数量:</label>
+                <input type="number" id="quantity" required>
+                <br>
+                <label for="customername">客户信息:</label>
+                <input type="text" id="customername" required>
+                <br>
+                <button type="submit">连接</button>
+            </form>
+        </fieldset>
+        <fieldset>
+            <legend>信息</legend>
+            <table>
+                <thead>
+                    <tr>
+                        <th>车辆品牌</th>
+                        <th>车辆型号</th>
+                        <th>操作</th>
+                        <th>数量</th>
+                        <th>客户信息</th>
+                        <th>日期</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- 汽车数据将在这里动态生成 -->
+                </tbody>
+            </table>
+        </fieldset>
     </div>
 
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f4f4f4;
-            margin: 0;
-            padding: 0;
-        }
-
-        .container {
-            width: 80%;
-            margin: 20px auto;
-            background: white;
-            padding: 20px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-        }
-
-        h1 {
-            text-align: center;
-        }
-
-        form {
-            display: flex;
-            flex-direction: column;
-            margin-bottom: 20px;
-        }
-
-        label {
-            margin-top: 10px;
-        }
-
-        input {
-            padding: 5px;
-            margin-top: 5px;
-        }
-
-        button {
-            margin-top: 10px;
-            padding: 10px;
-            background-color: #007BFF;
-            color: white;
-            border: none;
-            cursor: pointer;
-        }
-
-        button:hover {
-            background-color: #0056b3;
-        }
-
         table {
             width: 100%;
             border-collapse: collapse;

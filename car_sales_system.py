@@ -96,6 +96,10 @@ def initialize_data():
     cursor.execute("INSERT INTO operators (username, password, role) VALUES ('202235010611', '202235010611', 'admin')")
     cursor.execute("INSERT INTO operators (username, password, role) VALUES ('guest', 'guest', 'guest')")
 
+    # 插入财务信息
+    cursor.execute("INSERT INTO financials (vehicle_id, transaction_type, amount, date) VALUES ('2', 'in', '2', '2024-12-04')")
+    cursor.execute("INSERT INTO financials (vehicle_id, transaction_type, amount, date) VALUES ('3', 'out', '1', '2023-01-01')")
+
     # 提交事务
     conn.commit()
     # 关闭连接
@@ -106,10 +110,6 @@ def connect_to_database():
     conn = sqlite3.connect('car_sales.db')
     cursor = conn.cursor()
     return conn, cursor
-
-# 断开到 SQLite 数据库的连接
-def disconnect_to_database(conn):
-    conn.close()
 
 class car_sales_system(http.server.BaseHTTPRequestHandler):
     max_cache_time = 86400  # 最大缓存时间，单位为秒
@@ -154,7 +154,7 @@ class car_sales_system(http.server.BaseHTTPRequestHandler):
                 self.end_headers()
                 # 如果登录成功，则返回车辆管理页面否则报错并指引用户返回登录页面
                 if role:
-                    self.wfile.write(self.generate_vehicles_management_html(username, password, role))
+                    self.wfile.write(self.generate_vehicles_management_html(role))
                 else:
                     self.wfile.write(self.generate_error_html(200, '用户名或密码有误。'))
             # 当访问 car_sales_system.css 时，返回样式表
@@ -306,159 +306,128 @@ class car_sales_system(http.server.BaseHTTPRequestHandler):
 </html>'''.encode('utf-8')
     
     # 生成车辆管理页面
-    def generate_vehicles_management_html(self):
-        return '''<!DOCTYPE html>
+    def generate_vehicles_management_html(self, role):
+        control = ' style="display:none"'
+        if role == '(\'admin\',)':
+            control = ''
+        return f'''<!DOCTYPE html>
 <html lang="zh-CN">
 
 <head>
     <meta charset="UTF-8">
+    <link type="text/css" rel="stylesheet" href="car_sales_system.css">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>汽车管理系统</title>
 </head>
 
 <body>
     <div class="container">
-        <h1>汽车管理系统</h1>
-        <form id="addVehicleForm">
-            <label for="brand">车辆品牌:</label>
-            <input type="text" id="brand" required>
-            <label for="model">车辆型号:</label>
-            <input type="text" id="model" required>
-            <label for="operation">操作:</label>
-            <p><input type="radio" name="operation" value="buy" required> 买入 <input type="radio" name="operation"
-                    value="sell" required> 卖出</p>
-            <label for="quantity">数量:</label>
-            <input type="number" id="quantity" required>
-            <label for="customername">客户信息:</label>
-            <input type="text" id="customername" required>
-            <button type="submit">添加</button>
-        </form>
-
-        <table id="vehicleTable">
-            <thead>
-                <tr>
-                    <th>车辆品牌</th>
-                    <th>车辆型号</th>
-                    <th>操作</th>
-                    <th>数量</th>
-                    <th>客户信息</th>
-                    <th>日期</th>
-                </tr>
-            </thead>
-            <tbody>
-                <!-- 汽车数据将在这里动态生成 -->
-            </tbody>
-        </table>
+        <a href="">……界面</a>
+        <a href="Login.html">退出登录</a>
+        <fieldset{control}>
+            <legend>汽车管理系统：操作</legend>
+            <form id="addVehicleForm">
+                <label for="brand">车辆品牌:</label>
+                <input type="text" id="brand" required>
+                <br>
+                <label for="model">车辆型号:</label>
+                <input type="text" id="model" required>
+                <br>
+                <label for="operation">操作:</label>
+                <input type="radio" name="operation" value="buy" required> 买入 <input type="radio" name="operation"
+                    value="sell" required> 卖出
+                <br>
+                <label for="quantity">数量:</label>
+                <input type="number" id="quantity" required>
+                <br>
+                <label for="customername">客户信息:</label>
+                <input type="text" id="customername" required>
+                <br>
+                <button type="submit">连接</button>
+            </form>
+        </fieldset>
+        <fieldset>
+            <legend>信息</legend>
+            <table>
+                <thead>
+                    <tr>
+                        <th>车辆品牌</th>
+                        <th>车辆型号</th>
+                        <th>操作</th>
+                        <th>数量</th>
+                        <th>客户信息</th>
+                        <th>日期</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- 汽车数据将在这里动态生成 -->
+                    {self.get_vehicle_transactions}
+                </tbody>
+            </table>
+        </fieldset>
     </div>
 
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f4f4f4;
-            margin: 0;
-            padding: 0;
-        }
-
-        .container {
-            width: 80%;
-            margin: 20px auto;
-            background: white;
-            padding: 20px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-        }
-
-        h1 {
-            text-align: center;
-        }
-
-        form {
-            display: flex;
-            flex-direction: column;
-            margin-bottom: 20px;
-        }
-
-        label {
-            margin-top: 10px;
-        }
-
-        input {
-            padding: 5px;
-            margin-top: 5px;
-        }
-
-        button {
-            margin-top: 10px;
-            padding: 10px;
-            background-color: #007BFF;
-            color: white;
-            border: none;
-            cursor: pointer;
-        }
-
-        button:hover {
-            background-color: #0056b3;
-        }
-
-        table {
+        table {{
             width: 100%;
             border-collapse: collapse;
-        }
+        }}
 
         th,
-        td {
+        td {{
             padding: 10px;
             text-align: left;
             border-bottom: 1px solid #ddd;
-        }
+        }}
 
-        th {
+        th {{
             background-color: #f2f2f2;
-        }
+        }}
     </style>
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
+        document.addEventListener('DOMContentLoaded', () => {{
             // 添加汽车
-            addVehicleForm.addEventListener('submit', (e) => {
+            addVehicleForm.addEventListener('submit', (e) => {{
                 e.preventDefault();
                 const brand = document.getElementById('brand').value;
                 const model = document.getElementById('model').value;
                 const radios = document.querySelectorAll('input[name="operation"]');
                 var operation = null;
-                radios.forEach(radio => {
-                    if (radio.checked) {
+                radios.forEach(radio => {{
+                    if (radio.checked) {{
                         operation = radio.value;
-                    }
-                });
+                    }}
+                }});
                 const quantity = document.getElementById('quantity').value;
                 const customername = document.getElementById('customername').value;
 
                 // 构建请求体
-                const data = {
+                const data = {{
                     brand: brand,
                     model: model,
                     operation: operation,
                     quantity: quantity,
                     customername: customername
-                };
+                }};
 
                 // 发送 POST 请求
-                fetch('/add_message', {
+                fetch('/add_message', {{
                     method: 'POST',
-                    headers: {
+                    headers: {{
                         'Content-Type': 'application/json'
-                    },
+                    }},
                     body: JSON.stringify(data)
-                })
+                }})
                     .then(response => response.json())
-                    .then(data => {
+                    .then(data => {{
                         console.log('Success:', data);
                         // 可以在这里处理成功后的逻辑，例如更新表格
-                    })
-                    .catch((error) => {
+                    }})
+                    .catch((error) => {{
                         console.error('Error:', error);
-                    });
-            });
-        });
+                    }});
+            }});
+        }});
     </script>
 </body>
 
@@ -478,6 +447,15 @@ class car_sales_system(http.server.BaseHTTPRequestHandler):
             errorMsg = f'错误代码：{errorCode}<br>Error code: {errorCode}'
         return f'''<!DOCTYPE html><html lang="zh-Hans"><head><meta charset="UTF-8"><title>错误：{errorCode}</title><link type="text/css" rel="stylesheet" href="/car_sales_system.css"><meta name="viewport" content="width=192, initial-scale=1.0"></head><body><div class="container"><fieldset><legend>错误：{errorCode}</legend><div class="content">{errorMsg}</div>{buttons}</fieldset></div><div class="loading-bar"><div class="progress"></div></div></body></html>'''.encode('utf-8')
 
+    # 获取车辆交易信息
+    def get_vehicle_transactions(self):
+        conn, cursor = connect_to_database()
+        cursor.execute("SELECT * FROM financials")
+        financials = cursor.fetchall()
+        conn.close()
+        print(financials)
+        return financials
+    
     # 生成并返回错误页面头信息和页面内容
     def send_msg_error(self, errorCode, errorMsg = '', buttons = "<a href='/login.html'>重新登录</a>"):
         self.send_response(errorCode)
@@ -493,7 +471,10 @@ class car_sales_system(http.server.BaseHTTPRequestHandler):
         cursor.execute("SELECT role FROM operators WHERE username=? AND password=?", (username, password))
         role = cursor.fetchone()
         conn.close()
-        return role is not None
+        if role is not None:
+            return role
+        else:
+            return role is not None
 
     # 检查字符串是否包含非法字符
     def check_string(self, string):
