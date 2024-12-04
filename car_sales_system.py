@@ -56,8 +56,10 @@ def initialize_database():
             vehicle_id INTEGER,
             transaction_type TEXT NOT NULL,
             amount REAL,
+            customer_id INTEGER,
             date TEXT,
-            FOREIGN KEY (vehicle_id) REFERENCES vehicles(id)
+            FOREIGN KEY (vehicle_id) REFERENCES vehicles(id),
+            FOREIGN KEY (customer_id) REFERENCES customers(id)
         )
     ''')
 
@@ -97,8 +99,8 @@ def initialize_data():
     cursor.execute("INSERT INTO operators (username, password, role) VALUES ('guest', 'guest', 'guest')")
 
     # 插入财务信息
-    cursor.execute("INSERT INTO financials (vehicle_id, transaction_type, amount, date) VALUES ('2', 'in', '2', '2024-12-04')")
-    cursor.execute("INSERT INTO financials (vehicle_id, transaction_type, amount, date) VALUES ('3', 'out', '1', '2023-01-01')")
+    cursor.execute("INSERT INTO financials (vehicle_id, transaction_type, amount, customer_id, date) VALUES (2, 'in', '2', 1, '2024-12-04')")
+    cursor.execute("INSERT INTO financials (vehicle_id, transaction_type, amount, customer_id, date) VALUES (3, 'out', '1', 1, '2023-01-01')")
 
     # 提交事务
     conn.commit()
@@ -308,7 +310,7 @@ class car_sales_system(http.server.BaseHTTPRequestHandler):
     # 生成车辆管理页面
     def generate_vehicles_management_html(self, role):
         control = ' style="display:none"'
-        if role == '(\'admin\',)':
+        if role == 'admin':
             control = ''
         return f'''<!DOCTYPE html>
 <html lang="zh-CN">
@@ -322,8 +324,11 @@ class car_sales_system(http.server.BaseHTTPRequestHandler):
 
 <body>
     <div class="container">
-        <a href="">……界面</a>
-        <a href="Login.html">退出登录</a>
+        <fieldset>
+            <legend>导航</legend>
+            <a href="">……界面</a>
+            <a href="login.html">退出登录</a>
+        </fieldset>
         <fieldset{control}>
             <legend>汽车管理系统：操作</legend>
             <form id="addVehicleForm">
@@ -361,7 +366,7 @@ class car_sales_system(http.server.BaseHTTPRequestHandler):
                 </thead>
                 <tbody>
                     <!-- 汽车数据将在这里动态生成 -->
-                    {self.get_vehicle_transactions}
+                    {self.get_vehicle_transactions()}
                 </tbody>
             </table>
         </fieldset>
@@ -451,9 +456,14 @@ class car_sales_system(http.server.BaseHTTPRequestHandler):
     def get_vehicle_transactions(self):
         conn, cursor = connect_to_database()
         cursor.execute("SELECT * FROM financials")
-        financials = cursor.fetchall()
+        raw = cursor.fetchall()
+        financials = ''
+        for i in raw:
+            financials += '<tr>'
+            for j in i:
+                financials += f'<td>{j}</td>'
+            financials += '</tr>'
         conn.close()
-        print(financials)
         return financials
     
     # 生成并返回错误页面头信息和页面内容
@@ -469,7 +479,9 @@ class car_sales_system(http.server.BaseHTTPRequestHandler):
         conn, cursor = connect_to_database()
         # 从数据库中获取用户名和密码相对应的用户信息
         cursor.execute("SELECT role FROM operators WHERE username=? AND password=?", (username, password))
-        role = cursor.fetchone()
+        role = cursor.fetchone() # ('admin',)
+        # 格式化 role
+        role = role[0] if role else None
         conn.close()
         if role is not None:
             return role
@@ -499,6 +511,8 @@ def initialize_server():
 
 if __name__ == '__main__':
     # 检查 car_sales.db 数据库是否存在
+    if os.path.exists('car_sales.db'):
+        os.remove('car_sales.db')
     if not os.path.exists('car_sales.db'):
         print("数据库不存在，正在创建...")
         initialize_database()
