@@ -1,6 +1,7 @@
 import argparse
 import os
 import http.server
+import json
 import socketserver
 import sqlite3
 from urllib.parse import urlparse, parse_qs
@@ -194,12 +195,24 @@ class car_sales_system(http.server.BaseHTTPRequestHandler):
             if self.path == '/add_message':
                 content_length = int(self.headers['Content-Length'])
                 post_data = self.rfile.read(content_length).decode('utf-8')
-                post_data = parse_qs(post_data)
-                model = post_data.get('model', [''])[0]
-                brand = post_data.get('brand', [''])[0]
-                transaction_type = post_data.get('transaction_type', [''])[0]
-                amount = post_data.get('amount', [''])[0]
-                customer_name = post_data.get('customer_name', [''])[0]
+                data = json.loads(post_data)
+                brand = data.get('brand')
+                model = data.get('model')
+                manufacturer = data.get('manufacturer')
+                operation = data.get('operation')
+                quantity = int(data.get('quantity'))
+                customername = data.get('customername')
+
+                if (quantity < 1):
+                    self.send_msg_error(400, "数量必须大于0！")
+                else:
+                    self.send_response(200)
+                    self.send_header('Content-type', 'application/json')
+                    self.end_headers()
+                    response = {'status': 'success', 'message': 'Data received'}
+                    self.wfile.write(json.dumps(response).encode('utf-8'))
+                
+                self.add_data(brand, model, manufacturer, operation, quantity, customername)
             else:
                 self.send_msg_error(404, "未找到该资源。")
         except Exception as e:
@@ -327,7 +340,7 @@ class car_sales_system(http.server.BaseHTTPRequestHandler):
 </head>
 
 <body>
-    <div class="container">
+    <div class="container" style="max-width: 800px;">
         <fieldset>
             <legend>汽车管理系统</legend>
             <a href="404.html">库存信息</a>
@@ -335,33 +348,51 @@ class car_sales_system(http.server.BaseHTTPRequestHandler):
         </fieldset>
         <fieldset{control}>
             <legend>操作</legend>
-            <form id="addVehicleForm">
-                <label for="brand">车辆品牌:</label>
-                <input type="text" id="brand" required>
-                <br>
-                <label for="model">车辆型号:</label>
-                <input type="text" id="model" required>
-                <br>
-                <label for="operation">操作:</label>
-                <input type="radio" name="operation" value="buy" required> 买入 <input type="radio" name="operation"
-                    value="sell" required> 卖出
-                <br>
-                <label for="quantity">数量:</label>
-                <input type="number" id="quantity" required>
-                <br>
-                <label for="customername">客户信息:</label>
-                <input type="text" id="customername" required>
-                <br>
-                <button type="submit">连接</button>
-            </form>
+            <label for="brand">车辆品牌：</label>
+            <input type="text" list="brand_list" id="brand" required>
+            <datalist id="brand_list">
+                <!-- 默认选项 -->
+                {self.get_options('brand', 'vehicles')}
+            </datalist>
+            <br>
+            <label for="model">车辆型号：</label>
+            <input type="text" list="model_list" id="model" required>
+            <datalist id="model_list">
+                <!-- 默认选项 -->
+                {self.get_options('model', 'vehicles')}
+            </datalist>
+            <br>
+            <label for="manufacturer">车辆制造商：</label>
+            <input type="text" list="manufacturer_list" id="manufacturer" required>
+            <datalist id="manufacturer_list">
+                <!-- 默认选项 -->
+                {self.get_options('name', 'manufacturers')}
+            </datalist>
+            <br>
+            <label for="operation">操作：</label>
+            <input type="radio" name="operation" value="buy" required> 买入 <input type="radio" name="operation"
+                value="sell" required> 卖出
+            <br>
+            <label for="quantity">数量：</label>
+            <input type="number" id="quantity" required>
+            <br>
+            <label for="customername">客户信息：</label>
+            <input type="text" list="customername_list" id="customername" required>
+            <datalist id="customername_list">
+                <!-- 默认选项 -->
+                {self.get_options('name', 'customers')}
+            </datalist>
+            <br>
+            <button id="submit">提交</button>
         </fieldset>
         <fieldset>
-            <legend>信息</legend>
+            <legend>交易信息</legend>
             <table>
                 <thead>
                     <tr>
                         <th>车辆品牌</th>
                         <th>车辆型号</th>
+                        <th>车辆制造商</th>
                         <th>操作</th>
                         <th>数量</th>
                         <th>客户信息</th>
@@ -396,7 +427,7 @@ class car_sales_system(http.server.BaseHTTPRequestHandler):
     <script>
         document.addEventListener('DOMContentLoaded', () => {{
             // 添加汽车
-            addVehicleForm.addEventListener('submit', (e) => {{
+            document.querySelector('#submit').addEventListener('click', (e) => {{
                 e.preventDefault();
                 const brand = document.getElementById('brand').value;
                 const model = document.getElementById('model').value;
@@ -407,13 +438,37 @@ class car_sales_system(http.server.BaseHTTPRequestHandler):
                         operation = radio.value;
                     }}
                 }});
-                const quantity = document.getElementById('quantity').value;
+                const manufacturer = document.getElementById('manufacturer').value;
+                const quantity = parseInt(document.getElementById('quantity').value, 10);
                 const customername = document.getElementById('customername').value;
+                const illegal_chars = ['<', '>', '&', '"', "'", "\\\\"]
+
+                // 检查非法字符
+                function containsIllegalChars(str) {{
+                    return illegal_chars.some(char => str.includes(char));
+                }}
+
+                // 检查数量是否为正
+                function isNotPositiveNumber(num) {{
+                    return num < 1;
+                }}
+
+                // 验证输入
+                if (containsIllegalChars(brand) || containsIllegalChars(model) || containsIllegalChars(manufacturer) || containsIllegalChars(customername)) {{
+                    alert('输入包含非法字符：<, >, &, ", \\', \\\\');
+                    return;
+                }}
+
+                if (isNotPositiveNumber(quantity)) {{
+                    alert('数量必须为正数');
+                    return;
+                }}
 
                 // 构建请求体
                 const data = {{
                     brand: brand,
                     model: model,
+                    manufacturer: manufacturer,
                     operation: operation,
                     quantity: quantity,
                     customername: customername
@@ -427,13 +482,13 @@ class car_sales_system(http.server.BaseHTTPRequestHandler):
                     }},
                     body: JSON.stringify(data)
                 }})
-                    .then(response => response.json())
-                    .then(data => {{
+                    .then(response => {{
                         console.log('Success:', data);
-                        // 可以在这里处理成功后的逻辑，例如更新表格
+                        window.location.reload();
                     }})
                     .catch((error) => {{
                         console.error('Error:', error);
+                        alert(error);
                     }});
             }});
         }});
@@ -448,7 +503,7 @@ class car_sales_system(http.server.BaseHTTPRequestHandler):
 
     # 生成样式表
     def generate_css(self):
-        return f'''body{{font-family:Arial,sans-serif;background-color:#f4f4f4;margin:0;padding-top:20px;color:#333}}.hide{{display:none}}.container{{box-sizing:border-box;overflow:hidden;width:100%;max-width:600px;margin:0 auto;padding:20px;background-color:#fff;border:1px solid #ccc;box-shadow:2px 2px 5px rgba(0,0,0,0.1);border-radius:5px}}fieldset{{border:1px solid #ddd;padding:10px;margin-bottom:5px}}legend{{font-weight:bold;padding:0 10px}}label{{display:block;margin-bottom:5px}}input[type="text"],iframe,.content{{box-sizing:border-box;max-width:100%;width:100%;padding:8px;margin-bottom:10px;border:1px solid #ddd;border-radius:3px}}a,a:visited,button{{align-items:center;text-decoration:none;padding:8px 15px;margin-right:5px;background-color:#007BFF;color:#fff;border:none;border-radius:3px;cursor:pointer}}a:hover,a:visited:hover,button:hover{{background-color:#0056b3}}button:active{{background-color:#0067b8}}@media (max-width:600px){{.container{{width:100%;height:100%;border:none;border-radius:0;box-shadow:none}}}}.loading-bar{{position:fixed;top:0;left:0;z-index:99999;opacity:0;transition:opacity .4s linear;.progress{{position:fixed;top:0;left:0;width:0;height:4px;background-color:#007bff;box-shadow:0 0 10px rgba(119,182,255,.7)}}&.loading{{opacity:1;transition:none;.progress{{transition:width .4s ease}}}}}}'''.encode('utf-8')
+        return f'''body{{font-family:Arial,sans-serif;background-color:#f4f4f4;margin:0;padding-top:20px;color:#333}}.hide{{display:none}}.container{{box-sizing:border-box;overflow:hidden;width:100%;max-width:600px;margin:0 auto;padding:20px;background-color:#fff;border:1px solid #ccc;box-shadow:2px 2px 5px rgba(0,0,0,0.1);border-radius:5px}}fieldset{{border:1px solid #ddd;padding:10px;margin-bottom:5px}}legend{{font-weight:bold;padding:0 10px}}label{{display:block;margin-bottom:5px}}input[type="text"],input[type="number"],iframe,.content{{box-sizing:border-box;max-width:100%;width:100%;padding:8px;margin-bottom:10px;border:1px solid #ddd;border-radius:3px}}a,a:visited,button{{align-items:center;text-decoration:none;padding:8px 15px;margin-right:5px;background-color:#007BFF;color:#fff;border:none;border-radius:3px;cursor:pointer}}a:hover,a:visited:hover,button:hover{{background-color:#0056b3}}button:active{{background-color:#0067b8}}@media (max-width:600px){{.container{{width:100%;height:100%;border:none;border-radius:0;box-shadow:none}}}}.loading-bar{{position:fixed;top:0;left:0;z-index:99999;opacity:0;transition:opacity .4s linear;.progress{{position:fixed;top:0;left:0;width:0;height:4px;background-color:#007bff;box-shadow:0 0 10px rgba(119,182,255,.7)}}&.loading{{opacity:1;transition:none;.progress{{transition:width .4s ease}}}}}}'''.encode('utf-8')
 
     # 生成报错误页面
     def generate_error_html(self, errorCode, errorMsg = '', buttons = "<a href='/login.html'>重新登录</a>"):
@@ -460,25 +515,54 @@ class car_sales_system(http.server.BaseHTTPRequestHandler):
     def get_vehicle_transactions(self):
         conn, cursor = connect_to_database()
         cursor.execute('''
-            SELECT t1.brand, t1.model, t0.transaction_type, t0.amount, t2.name, t0.date 
-            FROM financials t0, vehicles t1, customers t2
-            WHERE t0.vehicle_id = t1.id AND t0.customer_id = t2.id
+            SELECT t1.brand, t1.model, t3.name, t0.transaction_type, t0.amount, t2.name, t0.date 
+            FROM financials t0, vehicles t1, customers t2, manufacturers t3
+            WHERE t0.vehicle_id = t1.id AND t0.customer_id = t2.id AND t1.manufacturer_id = t3.id
         ''')
         raw = cursor.fetchall()
+        conn.close()
         financials = ''
         for i in raw:
             financials += '<tr>'
             for j in i:
                 financials += f'<td>{j}</td>'
             financials += '</tr>'
-        conn.close()
         return financials
+
+    # 获取单个属性的所有数据
+    def get_single_attribute_data(self, attribute, table_name):
+        conn, cursor = connect_to_database()
+        cursor.execute(f'SELECT DISTINCT {attribute} FROM {table_name}')
+        data = cursor.fetchall()
+        conn.close()
+        return data
+
+    # 获取单个属性的所有数据
+    def get_options(self, attribute, table_name):
+        raw = self.get_single_attribute_data(attribute, table_name)
+        data = ''
+        for i in raw:
+            data += f'<option value="{i[0]}"></option>'
+        return data
+
+    # 是否存在某车辆
+    def exist_vehicle(self, brand, model):
+        pass
+        conn, cursor = connect_to_database()
+
+    # 整理数据并写入数据库
+    def add_data(self, brand, model, manufacturer, operation, quantity, customername):
+        if operation == 'sell':
+            pass
+        elif operation == 'buy':
+            pass
+        pass
     
     # 生成并返回错误页面头信息和页面内容
     def send_msg_error(self, errorCode, errorMsg = '', buttons = "<a href='/login.html'>重新登录</a>"):
         self.send_response(errorCode)
         self.send_header('Content-type', 'text/html; charset=utf-8')
-        self.send_header('Cache-Control', 'public, max-age=15')
+        self.send_header('Cache-Control', 'public, max-age=5')
         self.end_headers()
         self.wfile.write(self.generate_error_html(errorCode, errorMsg, buttons))
 
@@ -487,7 +571,7 @@ class car_sales_system(http.server.BaseHTTPRequestHandler):
         conn, cursor = connect_to_database()
         # 从数据库中获取用户名和密码相对应的用户信息
         cursor.execute("SELECT role FROM operators WHERE username=? AND password=?", (username, password))
-        role = cursor.fetchone() # ('admin',)
+        role = cursor.fetchone()
         # 格式化 role
         role = role[0] if role else None
         conn.close()

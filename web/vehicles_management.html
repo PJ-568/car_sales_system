@@ -9,41 +9,55 @@
 </head>
 
 <body>
-    <div class="container">
+    <div class="container" style="max-width: 800px;">
         <fieldset>
             <legend>汽车管理系统</legend>
             <a href="404.html">库存信息</a>
-            <a href="Login.html">退出登录</a>
+            <a href="login.html">退出登录</a>
         </fieldset>
         <fieldset>
             <legend>操作</legend>
-            <form id="addVehicleForm">
-                <label for="brand">车辆品牌:</label>
-                <input type="text" id="brand" required>
-                <br>
-                <label for="model">车辆型号:</label>
-                <input type="text" id="model" required>
-                <br>
-                <label for="operation">操作:</label>
-                <input type="radio" name="operation" value="buy" required> 买入 <input type="radio" name="operation"
-                    value="sell" required> 卖出
-                <br>
-                <label for="quantity">数量:</label>
-                <input type="number" id="quantity" required>
-                <br>
-                <label for="customername">客户信息:</label>
-                <input type="text" id="customername" required>
-                <br>
-                <button type="submit">连接</button>
-            </form>
+            <label for="brand">车辆品牌：</label>
+            <input type="text" list="brand_list" id="brand" required>
+            <datalist id="brand_list">
+                <!-- 默认选项 -->
+            </datalist>
+            <br>
+            <label for="model">车辆型号：</label>
+            <input type="text" list="model_list" id="model" required>
+            <datalist id="model_list">
+                <!-- 默认选项 -->
+            </datalist>
+            <br>
+            <label for="manufacturer">车辆制造商：</label>
+            <input type="text" list="manufacturer_list" id="manufacturer" required>
+            <datalist id="manufacturer_list">
+                <!-- 默认选项 -->
+            </datalist>
+            <br>
+            <label for="operation">操作：</label>
+            <input type="radio" name="operation" value="buy" required> 买入 <input type="radio" name="operation"
+                value="sell" required> 卖出
+            <br>
+            <label for="quantity">数量：</label>
+            <input type="number" id="quantity" required>
+            <br>
+            <label for="customername">客户信息：</label>
+            <input type="text" list="customername_list" id="customername" required>
+            <datalist id="customername_list">
+                <!-- 默认选项 -->
+            </datalist>
+            <br>
+            <button id="submit">提交</button>
         </fieldset>
         <fieldset>
-            <legend>信息</legend>
+            <legend>交易信息</legend>
             <table>
                 <thead>
                     <tr>
                         <th>车辆品牌</th>
                         <th>车辆型号</th>
+                        <th>车辆制造商</th>
                         <th>操作</th>
                         <th>数量</th>
                         <th>客户信息</th>
@@ -77,8 +91,7 @@
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             // 添加汽车
-            addVehicleForm.addEventListener('submit', (e) => {
-                e.preventDefault();
+            document.querySelector('#submit').addEventListener('click', (e) => {
                 const brand = document.getElementById('brand').value;
                 const model = document.getElementById('model').value;
                 const radios = document.querySelectorAll('input[name="operation"]');
@@ -88,13 +101,37 @@
                         operation = radio.value;
                     }
                 });
-                const quantity = document.getElementById('quantity').value;
+                const manufacturer = document.getElementById('manufacturer').value;
+                const quantity = parseInt(document.getElementById('quantity').value, 10);
                 const customername = document.getElementById('customername').value;
+                const illegal_chars = ['<', '>', '&', '"', "'", "\\"]
+
+                // 检查非法字符
+                function containsIllegalChars(str) {
+                    return illegal_chars.some(char => str.includes(char));
+                }
+
+                // 检查数量是否为正
+                function isNotPositiveNumber(num) {
+                    return num < 1;
+                }
+
+                // 验证输入
+                if (containsIllegalChars(brand) || containsIllegalChars(model) || containsIllegalChars(manufacturer) || containsIllegalChars(customername)) {
+                    alert('输入包含非法字符：<, >, &, ", \', \\');
+                    return;
+                }
+
+                if (isNotPositiveNumber(quantity)) {
+                    alert('数量必须为正数');
+                    return;
+                }
 
                 // 构建请求体
                 const data = {
                     brand: brand,
                     model: model,
+                    manufacturer: manufacturer,
                     operation: operation,
                     quantity: quantity,
                     customername: customername
@@ -108,13 +145,13 @@
                     },
                     body: JSON.stringify(data)
                 })
-                    .then(response => response.json())
-                    .then(data => {
+                    .then(response => {
                         console.log('Success:', data);
-                        // 可以在这里处理成功后的逻辑，例如更新表格
+                        window.location.reload();
                     })
                     .catch((error) => {
                         console.error('Error:', error);
+                        alert(error);
                     });
             });
         });
