@@ -52,3 +52,45 @@
   - 后端
     Python
     SQLite
+
+## 数据库表结构
+
+### 车辆信息 (vehicles)
+
+- `id`: 主键，整数型
+- `brand`: 品牌，文本型，不允许为空
+- `model`: 型号，文本型，不允许为空
+- `manufacturer_id`: 厂商ID，整数型，外键关联 `manufacturers` 表的 `id`
+
+### 厂商信息 (manufacturers)
+
+- `id`: 主键，整数型
+- `name`: 名称，文本型，不允许为空
+
+### 操作员信息 (operators)
+
+- `id`: 主键，整数型
+- `username`: 用户名，文本型，不允许为空且唯一
+- `password`: 密码，文本型，不允许为空
+- `role`: 角色，文本型，不允许为空
+
+### 客户信息 (customers)
+
+- `id`: 主键，整数型
+- `name`: 名称，文本型，不允许为空
+- `contact_info`: 联系信息，文本型
+
+### 财务信息 (financials)
+
+- `id`: 主键，整数型
+- `vehicle_id`: 车辆ID，整数型，外键关联 `vehicles` 表的 `id`
+- `transaction_type`: 交易类型，文本型，不允许为空
+- `amount`: 金额，整数型
+- `customer_id`: 客户ID，整数型，外键关联 `customers` 表的 `id`
+- `date`: 日期，文本型
+
+### 库存信息 (inventory)
+
+- `id`: 主键，整数型
+- `vehicle_id`: 车辆ID，整数型，外键关联 `vehicles` 表的 `id`
+- `quantity`: 数量，整数型

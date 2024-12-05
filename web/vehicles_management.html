@@ -71,23 +71,6 @@
         </fieldset>
     </div>
 
-    <style>
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-
-        th,
-        td {
-            padding: 10px;
-            text-align: left;
-            border-bottom: 1px solid #ddd;
-        }
-
-        th {
-            background-color: #f2f2f2;
-        }
-    </style>
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             // 添加汽车
@@ -145,9 +128,23 @@
                     },
                     body: JSON.stringify(data)
                 })
-                    .then(response => {
-                        console.log('Success:', data);
-                        window.location.reload();
+                    .then(response => response.text())
+                    .then(data => {
+                        console.log('response:', data);
+                        if (data != 'success') {
+                            alert('添加失败：' + data);
+                        } else {
+                            // 清空表单
+                            document.getElementById('brand').value = '';
+                            document.getElementById('model').value = '';
+                            document.getElementById('manufacturer').value = '';
+                            document.getElementById('customername').value = '';
+                            document.getElementById('quantity').value = '';
+                            for (let i = 0; i < radios.length; i++) {
+                                radios[i].checked = false;
+                            }
+                            window.location.reload();
+                        }
                     })
                     .catch((error) => {
                         console.error('Error:', error);

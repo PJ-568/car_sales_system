@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <link type="text/css" rel="stylesheet" href="car_sales_system.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>管理员测试页面</title>
+</head>
+
+<body>
+    <div class="container" style="max-width:800px">
+        <form action="console" method="post">
+            <fieldset>
+                <legend>管理员测试页面</legend>
+                <div class="content">运行结果：<br><i>暂无。</i></div>
+                <br>
+                <label for="messageInput">请键入指令：</label>
+                <input list="inp" type="text" id="messageInput" name="messageInput">
+                <datalist id="inp">
+                    <option value="select * from vehicles"></option>
+                    <option value="select * from manufacturers"></option>
+                    <option value="select * from operators"></option>
+                    <option value="select * from customers"></option>
+                    <option
+                        value="select t1.brand, t1.model, t3.name, t0.transaction_type, t0.amount, t2.name, t0.date FROM financials t0, vehicles t1, customers t2, manufacturers t3 where t0.vehicle_id = t1.id and t0.customer_id = t2.id and t1.manufacturer_id = t3.id">
+                    </option>
+                    <option
+                        value="select brand, model, manufacturers.name, quantity from inventory, vehicles, manufacturers where vehicles.id = inventory.vehicle_id and vehicles.manufacturer_id = manufacturers.id">
+                    </option>
+                    <option value="insert into vehicles (brand, model, manufacturer_id) values ('Audi', 'A6', 1)">
+                    </option>
+                    <option value="select * from vehicles"></option>
+                    <option value="reset-database"></option>
+                </datalist>
+                <button type="submit">发送</button>
+                <button onclick="javascript:window.history.back">返回</button>
+            </fieldset>
+            <fieldset>
+                <legend>参考</legend>
+                <h2>指令格式</h2>
+
+                <p>直接输入 SQL 命令，或使用以下特殊命令：</p>
+                <ul>
+                    <li>
+                        <code>reset-database</code>：重置整个数据库并初始化数据。
+                    </li>
+                </ul>
+
+                <h2>示例</h2>
+
+                <p>查看账单：</p>
+                <codeblock>
+                    <code>select t1.brand, t1.model, t3.name, t0.transaction_type, t0.amount, t2.name, t0.date </code>
+                    <code>from financials t0, vehicles t1, customers t2, manufacturers t3</code>
+                    <code>where t0.vehicle_id = t1.id and t0.customer_id = t2.id and t1.manufacturer_id = t3.id</code>
+                </codeblock>
+
+                <p>查看库存：</p>
+                <codeblock>
+                    <code>select brand, model, manufacturers.name, quantity </code>
+                    <code>from inventory, vehicles, manufacturers</code>
+                    <code>where vehicles.id = inventory.vehicle_id and vehicles.manufacturer_id = manufacturers.id</code>
+                </codeblock>
+
+                <h2>汽车销售系统数据库表结构</h2>
+
+                <h3>车辆信息 (vehicles)</h3>
+                <table>
+                    <tr>
+                        <th>字段名</th>
+                        <th>数据类型</th>
+                        <th>约束</th>
+                    </tr>
+                    <tr>
+                        <td>id</td>
+                        <td>整数型</td>
+                        <td>主键</td>
+                    </tr>
+                    <tr>
+                        <td>brand</td>
+                        <td>文本型</td>
+                        <td>不允许为空</td>
+                    </tr>
+                    <tr>
+                        <td>model</td>
+                        <td>文本型</td>
+                        <td>不允许为空</td>
+                    </tr>
+                    <tr>
+                        <td>manufacturer_id</td>
+                        <td>整数型</td>
+                        <td>外键关联 manufacturers 表的 id</td>
+                    </tr>
+                </table>
+
+                <h3>厂商信息 (manufacturers)</h3>
+                <table>
+                    <tr>
+                        <th>字段名</th>
+                        <th>数据类型</th>
+                        <th>约束</th>
+                    </tr>
+                    <tr>
+                        <td>id</td>
+                        <td>整数型</td>
+                        <td>主键</td>
+                    </tr>
+                    <tr>
+                        <td>name</td>
+                        <td>文本型</td>
+                        <td>不允许为空</td>
+                    </tr>
+                </table>
+
+                <h3>操作员信息 (operators)</h3>
+                <table>
+                    <tr>
+                        <th>字段名</th>
+                        <th>数据类型</th>
+                        <th>约束</th>
+                    </tr>
+                    <tr>
+                        <td>id</td>
+                        <td>整数型</td>
+                        <td>主键</td>
+                    </tr>
+                    <tr>
+                        <td>username</td>
+                        <td>文本型</td>
+                        <td>不允许为空且唯一</td>
+                    </tr>
+                    <tr>
+                        <td>password</td>
+                        <td>文本型</td>
+                        <td>不允许为空</td>
+                    </tr>
+                    <tr>
+                        <td>role</td>
+                        <td>文本型</td>
+                        <td>不允许为空</td>
+                    </tr>
+                </table>
+
+                <h3>客户信息 (customers)</h3>
+                <table>
+                    <tr>
+                        <th>字段名</th>
+                        <th>数据类型</th>
+                        <th>约束</th>
+                    </tr>
+                    <tr>
+                        <td>id</td>
+                        <td>整数型</td>
+                        <td>主键</td>
+                    </tr>
+                    <tr>
+                        <td>name</td>
+                        <td>文本型</td>
+                        <td>不允许为空</td>
+                    </tr>
+                    <tr>
+                        <td>contact_info</td>
+                        <td>文本型</td>
+                        <td></td>
+                    </tr>
+                </table>
+
+                <h3>财务信息 (financials)</h3>
+                <table>
+                    <tr>
+                        <th>字段名</th>
+                        <th>数据类型</th>
+                        <th>约束</th>
+                    </tr>
+                    <tr>
+                        <td>id</td>
+                        <td>整数型</td>
+                        <td>主键</td>
+                    </tr>
+                    <tr>
+                        <td>vehicle_id</td>
+                        <td>整数型</td>
+                        <td>外键关联 vehicles 表的 id</td>
+                    </tr>
+                    <tr>
+                        <td>transaction_type</td>
+                        <td>文本型</td>
+                        <td>不允许为空</td>
+                    </tr>
+                    <tr>
+                        <td>amount</td>
+                        <td>整数型</td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td>customer_id</td>
+                        <td>整数型</td>
+                        <td>外键关联 customers 表的 id</td>
+                    </tr>
+                    <tr>
+                        <td>date</td>
+                        <td>文本型</td>
+                        <td></td>
+                    </tr>
+                </table>
+
+                <h3>库存信息 (inventory)</h3>
+                <table>
+                    <tr>
+                        <th>字段名</th>
+                        <th>数据类型</th>
+                        <th>约束</th>
+                    </tr>
+                    <tr>
+                        <td>id</td>
+                        <td>整数型</td>
+                        <td>主键</td>
+                    </tr>
+                    <tr>
+                        <td>vehicle_id</td>
+                        <td>整数型</td>
+                        <td>外键关联 vehicles 表的 id</td>
+                    </tr>
+                    <tr>
+                        <td>quantity</td>
+                        <td>整数型</td>
+                        <td></td>
+                    </tr>
+                </table>
+            </fieldset>
+        </form>
+    </div>
+    <script>
+        // 将指令发送至服务器，将服务器的输出结果显示在页面上
+        document.querySelector('form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const messageInput = document.getElementById('messageInput').value;
+            fetch('/console', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ message: messageInput })
+            })
+                .then(response => response.text())
+                .then(data => {
+                    document.querySelector('.content').innerHTML = data;
+                })
+                .catch((error) => {
+                    console.error('Error:', error);
+                });
+        });
+    </script>
+</body>
+
+</html>

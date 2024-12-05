@@ -13,11 +13,21 @@
         <fieldset>
             <legend>汽车销售登陆系统</legend>
             <label for="username">用户名:</label>
-            <input type="text" id="username" name="username" value="202235010623">
+            <input type="text" list="un" id="username" name="username" value="202235010623">
+            <datalist id="un">
+                <option value="202235010611"></option>
+                <option value="202235010623"></option>
+                <option value="guest"></option>
+            </datalist>
             <br>
             <label for="password">密码:</label>
-            <input type="text" id="password" name="password" value="202235010623">
+            <input type="text" list="pwd" id="password" name="password" value="202235010623">
             <br>
+            <datalist id="pwd">
+                <option value="202235010611"></option>
+                <option value="202235010623"></option>
+                <option value="guest"></option>
+            </datalist>
             <button type="submit" onclick="validateForm()">登陆</button>
             <button type="button" onclick="closeWindow()">取消</button>
         </fieldset>
