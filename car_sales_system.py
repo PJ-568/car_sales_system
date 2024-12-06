@@ -276,7 +276,7 @@ class car_sales_system(http.server.BaseHTTPRequestHandler):
         test_page_link = ''
         if role == 'admin':
             control = ''
-            test_page_link = '<a href="test_page.html" target="_blank">管理员测试页面</a>'
+            test_page_link = '<a href="test_page.html">管理员测试页面</a>'
         return f'''<!DOCTYPE html>
 <html lang="zh-CN">
 
