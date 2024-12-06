@@ -481,7 +481,7 @@ class car_sales_system(http.server.BaseHTTPRequestHandler):
                     <option value="reset-database"></option>
                 </datalist>
                 <button type="submit">发送</button>
-                <button onclick="javascript:window.history.back">返回</button>
+                <a href="login.html">返回</a>
             </fieldset>
             <fieldset>
                 <legend>参考</legend>
