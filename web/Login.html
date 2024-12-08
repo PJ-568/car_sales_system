@@ -21,7 +21,7 @@
             </datalist>
             <br>
             <label for="password">密码:</label>
-            <input type="text" list="pwd" id="password" name="password" value="202235010623">
+            <input type="password" list="pwd" id="password" name="password" value="202235010623">
             <br>
             <datalist id="pwd">
                 <option value="202235010611"></option>
@@ -29,7 +29,7 @@
                 <option value="guest"></option>
             </datalist>
             <button type="submit" onclick="validateForm()">登陆</button>
-            <button type="button" onclick="closeWindow()">取消</button>
+            <a href="index.html">取消</a>
         </fieldset>
         <script>
             function validateForm() {
@@ -39,9 +39,6 @@
                 //跳转到车辆管理页面
                 window.location.href = "vehicles_management.html?username=" + username + "&password=" + password;
             }
-            function closeWindow() {
-                window.close();
-            }           
         </script>
     </div>
 </body>

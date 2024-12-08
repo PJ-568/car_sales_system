@@ -22,10 +22,9 @@
             <input type="text" id="username" name="username" value="202235010623">
             <br>
             <label for="password">密码:</label>
-            <input type="text" id="password" name="password" value="202235010623">
+            <input type="password" id="password" name="password" value="202235010623">
             <br>
             <button type="submit" onclick="validateForm()">连接</button>
-            <button type="button" onclick="closeWindow()">取消</button>
         </fieldset>
         <script>
             function validateForm() {
@@ -51,9 +50,6 @@
                     alert('无法连接');
                 }, 1000);
             }
-            function closeWindow() {
-                window.close();
-            }           
         </script>
     </div>
 </body>

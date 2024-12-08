@@ -180,10 +180,9 @@ class car_sales_system(http.server.BaseHTTPRequestHandler):
             <input type="text" id="username" name="username" value="202235010623">
             <br>
             <label for="password">密码:</label>
-            <input type="text" id="password" name="password" value="202235010623">
+            <input type="password" id="password" name="password" value="202235010623">
             <br>
             <button type="submit" onclick="validateForm()">连接</button>
-            <button type="button" onclick="closeWindow()">取消</button>
         </fieldset>
         <script>
             function validateForm() {
@@ -209,9 +208,6 @@ class car_sales_system(http.server.BaseHTTPRequestHandler):
                     alert('无法连接');
                 }, 1000);
             }
-            function closeWindow() {
-                window.close();
-            }           
         </script>
     </div>
 </body>
@@ -243,7 +239,7 @@ class car_sales_system(http.server.BaseHTTPRequestHandler):
             </datalist>
             <br>
             <label for="password">密码:</label>
-            <input type="text" list="pwd" id="password" name="password" value="202235010623">
+            <input type="password" list="pwd" id="password" name="password" value="202235010623">
             <br>
             <datalist id="pwd">
                 <option value="202235010611"></option>
@@ -251,7 +247,7 @@ class car_sales_system(http.server.BaseHTTPRequestHandler):
                 <option value="guest"></option>
             </datalist>
             <button type="submit" onclick="validateForm()">登陆</button>
-            <button type="button" onclick="closeWindow()">取消</button>
+            <a href="index.html">取消</a>
         </fieldset>
         <script>
             function validateForm() {
@@ -261,9 +257,6 @@ class car_sales_system(http.server.BaseHTTPRequestHandler):
                 //跳转到车辆管理页面
                 window.location.href = "vehicles_management.html?username=" + username + "&password=" + password;
             }
-            function closeWindow() {
-                window.close();
-            }           
         </script>
     </div>
 </body>
@@ -463,7 +456,7 @@ class car_sales_system(http.server.BaseHTTPRequestHandler):
                 <div class="content">运行结果：<br><i>暂无。</i></div>
                 <br>
                 <label for="messageInput">请键入指令：</label>
-                <input list="inp" type="text" id="messageInput" name="messageInput">
+                <textarea list="inp" type="text" id="messageInput" name="messageInput"></textarea>
                 <datalist id="inp">
                     <option value="select * from vehicles"></option>
                     <option value="select * from manufacturers"></option>
@@ -709,7 +702,7 @@ class car_sales_system(http.server.BaseHTTPRequestHandler):
 
     # 生成样式表
     def generate_css(self):
-        return f'''body{{font-family:Arial,sans-serif;background-color:#f4f4f4;margin:0;padding-top:20px;color:#333}}.hide{{display:none}}.container{{box-sizing:border-box;overflow:hidden;width:100%;max-width:600px;margin:0 auto;padding:20px;background-color:#fff;border:1px solid #ccc;box-shadow:2px 2px 5px rgba(0,0,0,0.1);border-radius:5px}}fieldset{{border:1px solid #ddd;padding:10px;margin-bottom:5px}}legend{{font-weight:bold;padding:0 10px}}label{{display:block;margin-bottom:5px}}input[type="text"],input[type="number"],iframe,.content{{box-sizing:border-box;max-width:100%;width:100%;padding:8px;margin-bottom:10px;border:1px solid #ddd;border-radius:3px}}a,a:visited,button{{align-items:center;text-decoration:none;padding:8px 15px;margin-right:5px;background-color:#007BFF;color:#fff;border:none;border-radius:3px;cursor:pointer}}a:hover,a:visited:hover,button:hover{{background-color:#0056b3}}button:active{{background-color:#0067b8}}@media (max-width:600px){{.container{{width:100%;height:100%;border:none;border-radius:0;box-shadow:none}}}}table{{width:100%}}th,td{{border:1px solid #ddd}}th{{background-color:#f2f2f2}}'''.encode('utf-8')
+        return f'''body{{font-family:Arial,sans-serif;background-color:#f4f4f4;margin:0;padding-top:20px;color:#333}}.hide{{display:none}}.container{{box-sizing:border-box;overflow:hidden;width:100%;max-width:600px;margin:0 auto;padding:20px;background-color:#fff;border:1px solid #ccc;box-shadow:2px 2px 5px rgba(0,0,0,0.1);border-radius:5px}}fieldset{{border:1px solid #ddd;padding:10px;margin-bottom:5px}}legend{{font-weight:bold;padding:0 10px}}label{{display:block;margin-bottom:5px}}input[type="text"],input[type="number"],input[type="password"],textarea,iframe,.content{{box-sizing:border-box;max-width:100%;width:100%;padding:8px;margin-bottom:10px;border:1px solid #ddd;border-radius:3px}}a,a:visited,button{{align-items:center;text-decoration:none;padding:8px 15px;margin-right:5px;background-color:#007BFF;color:#fff;border:none;border-radius:3px;cursor:pointer}}a:hover,a:visited:hover,button:hover{{background-color:#0056b3}}button:active{{background-color:#0067b8}}@media (max-width:600px){{.container{{width:100%;height:100%;border:none;border-radius:0;box-shadow:none}}}}table{{width:100%}}th,td{{border:1px solid #ddd}}th{{background-color:#f2f2f2}}'''.encode('utf-8')
 
     # 生成报错误页面
     def generate_error_html(self, errorCode, errorMsg = '', buttons = "<a href='/login.html'>重新登录</a>"):
