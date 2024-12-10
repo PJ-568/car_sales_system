@@ -49,6 +49,24 @@ class car_sales_system(http.server.BaseHTTPRequestHandler):
                 self.end_headers()
                 # 返回页面内容
                 self.wfile.write(self.generate_login_html())
+            # 访问车辆库存管理页面
+            elif self.path == '/inventory_management.html' or self.path.startswith('/inventory_management.html'):
+                # 获取用户名和密码
+                query_string = urlparse(self.path).query
+                query_params = parse_qs(query_string)
+                username = query_params.get('username', [''])[0]
+                password = query_params.get('password', [''])[0]
+                role = self.check_login(username, password)
+                # 返回请求头
+                self.send_response(200)
+                self.send_header('Content-type', 'text/html; charset=utf-8')
+                self.send_header('Cache-Control', f'public, max-age=5')
+                self.end_headers()
+                # 如果登录成功，则返回页面内容否则报错并指引用户返回登录页面
+                if role:
+                    self.wfile.write(self.generate_inventory_management_html(username, password, role))
+                else:
+                    self.wfile.write(self.generate_error_html(300, '用户名或密码有误。'))
             # 访问车辆管理页面
             elif self.path.startswith('/vehicles_management.html'):
                 # 获取用户名和密码
@@ -63,9 +81,9 @@ class car_sales_system(http.server.BaseHTTPRequestHandler):
                 self.end_headers()
                 # 如果登录成功，则返回车辆管理页面否则报错并指引用户返回登录页面
                 if role:
-                    self.wfile.write(self.generate_vehicles_management_html(role))
+                    self.wfile.write(self.generate_vehicles_management_html(username, password, role))
                 else:
-                    self.wfile.write(self.generate_error_html(200, '用户名或密码有误。'))
+                    self.wfile.write(self.generate_error_html(300, '用户名或密码有误。'))
             # 当访问 car_sales_system.css 时，返回样式表
             elif self.path == '/car_sales_system.css':
                 # 返回请求头
@@ -264,7 +282,7 @@ class car_sales_system(http.server.BaseHTTPRequestHandler):
 </html>'''.encode('utf-8')
     
     # 生成车辆管理页面
-    def generate_vehicles_management_html(self, role):
+    def generate_vehicles_management_html(self, username, password, role):
         control = ' style="display:none"'
         test_page_link = ''
         if role == 'admin':
@@ -284,7 +302,7 @@ class car_sales_system(http.server.BaseHTTPRequestHandler):
     <div class="container" style="max-width: 800px;">
         <fieldset>
             <legend>汽车管理系统</legend>
-            <a href="404.html">库存信息</a>
+            <a href="inventory_management.html?username={username}&password={password}">库存信息</a>
             <a href="login.html">退出登录</a>
             {test_page_link}
         </fieldset>
@@ -432,6 +450,52 @@ class car_sales_system(http.server.BaseHTTPRequestHandler):
             }});
         }});
     </script>
+</body>
+
+</html>'''.encode('utf-8')
+
+    # 生成车辆库存管理页面
+    def generate_inventory_management_html(self, username, password, role):
+        test_page_link = ''
+        if role == 'admin':
+            test_page_link = '<a href="test_page.html">管理员测试页面</a>'
+        return f'''<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <link type="text/css" rel="stylesheet" href="car_sales_system.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>汽车库存管理系统</title>
+</head>
+
+<body>
+    <div class="container" style="max-width: 800px;">
+        <fieldset>
+            <legend>汽车库存管理系统</legend>
+            <a href="vehicles_management.html?username={username}&password={password}">汽车管理系统</a>
+            <a href="login.html">退出登录</a>
+            {test_page_link}
+        </fieldset>
+        <fieldset>
+            <legend>汽车库存信息</legend>
+            <table>
+                <thead>
+                    <tr>
+                        <th>车辆品牌</th>
+                        <th>车辆型号</th>
+                        <th>车辆库存</th>
+                        <th>日销售记录</th>
+                        <th>月销售记录</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- 汽车数据将在这里动态生成 -->
+                    {self.get_vehicle_inventory()}
+                </tbody>
+            </table>
+        </fieldset>
+    </div>
 </body>
 
 </html>'''.encode('utf-8')
@@ -727,6 +791,26 @@ class car_sales_system(http.server.BaseHTTPRequestHandler):
                 financials += f'<td>{j}</td>'
             financials += '</tr>'
         return financials
+
+    # 获取车辆库存信息
+    def get_vehicle_inventory(self):
+        conn, cursor = connect_to_database()
+        cursor.execute('''
+            select brand, model, quantity, (SELECT SUM(amount) FROM financials WHERE transaction_type = '卖出' AND date = date('now') AND financials.vehicle_id = vehicles.id), (SELECT SUM(amount) FROM financials WHERE transaction_type = '卖出' AND strftime('%Y-%m', date) = strftime('%Y-%m', 'now') AND financials.vehicle_id = vehicles.id)
+            from inventory, vehicles
+            where vehicles.id = inventory.vehicle_id
+        ''')
+        raw = cursor.fetchall()
+        conn.close()
+        inventory = ''
+        for i in raw:
+            inventory += '<tr>'
+            for j in i:
+                if j == None:
+                    j = '<i>无</i>'
+                inventory += f'<td>{j}</td>'
+            inventory += '</tr>'
+        return inventory
 
     # 获取单个属性的所有数据
     def get_single_attribute_data(self, attribute, table_name):
@@ -1037,9 +1121,9 @@ def initialize_data():
     cursor.execute("INSERT INTO operators (username, password, role) VALUES ('guest', 'guest', 'guest')")
 
     # 插入财务信息
-    cursor.execute("INSERT INTO financials (vehicle_id, transaction_type, amount, customer_id, date) VALUES (2, '买入', 2, 2, '2024-12-04')")
     cursor.execute("INSERT INTO financials (vehicle_id, transaction_type, amount, customer_id, date) VALUES (3, '卖出', 1, 1, '2023-01-01')")
-
+    cursor.execute("INSERT INTO financials (vehicle_id, transaction_type, amount, customer_id, date) VALUES (2, '买入', 2, 2, '2024-12-04')")
+    
     # 插入客户信息
     cursor.execute("INSERT INTO customers (name) VALUES ('墨水厂')")
     cursor.execute("INSERT INTO customers (name) VALUES ('莫洛托夫')")
