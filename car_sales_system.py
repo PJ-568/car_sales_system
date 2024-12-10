@@ -979,13 +979,13 @@ class car_sales_system(http.server.BaseHTTPRequestHandler):
     # 生成并返回错误页面头信息和页面内容
     def send_msg_error(self, errorCode, errorMsg = '', buttons = "<a href='/login.html'>重新登录</a>", html = True):
         self.send_response(errorCode)
-        self.send_header('Content-type', 'text/html; charset=utf-8')
-        self.send_header('Cache-Control', 'public, max-age=5')
-        self.end_headers()
         if html:
+            self.send_header('Content-type', 'text/html; charset=utf-8')
+            self.send_header('Cache-Control', 'public, max-age=5')
+            self.end_headers()
             self.wfile.write(self.generate_error_html(errorCode, errorMsg, buttons))
         else:
-            self.wfile.write(errorCode, errorMsg)
+            self.wfile.write(errorMsg)
 
     # 检查登录
     def check_login(self, username, password):
