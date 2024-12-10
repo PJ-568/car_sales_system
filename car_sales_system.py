@@ -171,7 +171,7 @@ class car_sales_system(http.server.BaseHTTPRequestHandler):
         <fieldset>
             <legend>数据库连接</legend>
             <label for="servername">服务器名:</label>
-            <input type="text" id="servername" name="servername" value="Local">
+            <input type="text" id="servername" name="servername" value="localhost">
             <br>
             <label for="dbname">数据库名:</label>
             <input type="text" id="dbname" name="dbname" value="汽车销售系统">
@@ -193,7 +193,7 @@ class car_sales_system(http.server.BaseHTTPRequestHandler):
                 const password = document.getElementById('password').value;
 
                 // 验证服务器名 ,验证数据库名
-                if ((servername !== 'Local') || (dbname !== '汽车销售系统')) {
+                if ((servername !== 'localhost') || (dbname !== '汽车销售系统')) {
                     setTimeout(() => {
                         alert('无法连接');
                     }, 1000);
