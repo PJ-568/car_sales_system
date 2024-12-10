@@ -280,7 +280,7 @@ class car_sales_system(http.server.BaseHTTPRequestHandler):
 </body>
 
 </html>'''.encode('utf-8')
-    
+
     # 生成车辆管理页面
     def generate_vehicles_management_html(self, username, password, role):
         control = ' style="display:none"'
