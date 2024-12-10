@@ -124,7 +124,7 @@ class car_sales_system(http.server.BaseHTTPRequestHandler):
                 customername = data.get('customername')
 
                 if (quantity < 1):
-                    self.send_msg_error(400, "数量必须大于0！")
+                    self.send_msg_error(400, "数量必须大于0！", "", False)
                 
                 self.add_data(brand, model, manufacturer, operation, quantity, customername)
             elif self.path == '/console':
@@ -145,9 +145,9 @@ class car_sales_system(http.server.BaseHTTPRequestHandler):
                 self.end_headers()
                 self.wfile.write(result.encode('utf-8'))
             else:
-                self.send_msg_error(404, "未找到该资源。")
+                self.send_msg_error(404, "未找到该资源。", "", False)
         except Exception as e:
-            self.send_msg_error(500, f"服务器出错。<br>{e}")
+            self.send_msg_error(500, f"服务器出错。<br>{e}", "", False)
 
     # 处理 SQL 命令
     def handle_sql_command(self, command):
@@ -165,7 +165,7 @@ class car_sales_system(http.server.BaseHTTPRequestHandler):
         except Exception as e:
             conn.rollback()  # 回滚事务
             result = f'数据库操作失败: {str(e)}<br>数据库输出：{str(cursor.fetchall())}<br>操作已回滚。'
-            self.send_msg_error(500, result)
+            self.send_msg_error(500, result, "", False)
             print(result)
             conn.close()
         finally:
@@ -873,13 +873,13 @@ class car_sales_system(http.server.BaseHTTPRequestHandler):
             if operation == 'sell':
                 # 检查厂商是否存在
                 if not self.manufacturer_exist(manufacturer):
-                    self.send_msg_error(400, '厂商不存在')
+                    self.send_msg_error(400, '厂商不存在', "", False)
                     print('无法卖出：厂商不存在')
                     return
 
                 # 检查车辆是否存在
                 if not self.vehicle_exist(brand, model, manufacturer):
-                    self.send_msg_error(400, '车辆不存在')
+                    self.send_msg_error(400, '车辆不存在', "", False)
                     print('无法卖出：车辆不存在')
                     return
                 
@@ -890,11 +890,11 @@ class car_sales_system(http.server.BaseHTTPRequestHandler):
                 ''', (brand, model, manufacturer))
                 stock = cursor.fetchone()
                 if stock is None:
-                    self.send_msg_error(400, '车辆不存在')
+                    self.send_msg_error(400, '车辆不存在', "", False)
                     print('无法卖出：车辆不存在')
                     return
                 if stock[0] < quantity:
-                    self.send_msg_error(400, '库存不足')
+                    self.send_msg_error(400, '库存不足', "", False)
                     print('无法卖出：库存不足')
                     return
                 
@@ -960,12 +960,12 @@ class car_sales_system(http.server.BaseHTTPRequestHandler):
                     VALUES ((SELECT id FROM vehicles WHERE brand=? AND model=? AND manufacturer_id=(SELECT id FROM manufacturers WHERE name=?)), (SELECT id FROM customers WHERE name=?), '买入', ?, date('now'))
                 ''', (brand, model, manufacturer, customer_name, quantity))
             else:
-                self.send_msg_error(400, '无效的操作')
+                self.send_msg_error(400, '无效的操作', "", False)
                 return
             conn.commit()
         except Exception as e:
             conn.rollback()  # 回滚事务
-            self.send_msg_error(500, f'数据库操作失败: {str(e)}')
+            self.send_msg_error(500, f'数据库操作失败: {str(e)}', "", False)
             print(f'数据库操作失败: {str(e)}')
             conn.close()
             return
@@ -977,12 +977,15 @@ class car_sales_system(http.server.BaseHTTPRequestHandler):
         self.wfile.write('success'.encode('utf-8'))
     
     # 生成并返回错误页面头信息和页面内容
-    def send_msg_error(self, errorCode, errorMsg = '', buttons = "<a href='/login.html'>重新登录</a>"):
+    def send_msg_error(self, errorCode, errorMsg = '', buttons = "<a href='/login.html'>重新登录</a>", html = True):
         self.send_response(errorCode)
         self.send_header('Content-type', 'text/html; charset=utf-8')
         self.send_header('Cache-Control', 'public, max-age=5')
         self.end_headers()
-        self.wfile.write(self.generate_error_html(errorCode, errorMsg, buttons))
+        if html:
+            self.wfile.write(self.generate_error_html(errorCode, errorMsg, buttons))
+        else:
+            self.wfile.write(errorCode, errorMsg)
 
     # 检查登录
     def check_login(self, username, password):
