@@ -60,7 +60,7 @@ class car_sales_system(http.server.BaseHTTPRequestHandler):
                 # 返回请求头
                 self.send_response(200)
                 self.send_header('Content-type', 'text/html; charset=utf-8')
-                self.send_header('Cache-Control', f'public, max-age={self.max_cache_time}')
+                self.send_header('Cache-Control', f'public, max-age=5')
                 self.end_headers()
                 # 如果登录成功，则返回页面内容否则报错并指引用户返回登录页面
                 if role:
@@ -797,8 +797,8 @@ class car_sales_system(http.server.BaseHTTPRequestHandler):
         conn, cursor = connect_to_database()
         cursor.execute('''
             select brand, model, quantity, (SELECT SUM(amount) FROM financials WHERE transaction_type = '卖出' AND date = date('now') AND financials.vehicle_id = vehicles.id), (SELECT SUM(amount) FROM financials WHERE transaction_type = '卖出' AND strftime('%Y-%m', date) = strftime('%Y-%m', 'now') AND financials.vehicle_id = vehicles.id)
-            from inventory, vehicles, financials
-            where vehicles.id = inventory.vehicle_id and vehicles.id = financials.vehicle_id
+            from inventory, vehicles
+            where vehicles.id = inventory.vehicle_id
         ''')
         raw = cursor.fetchall()
         conn.close()
