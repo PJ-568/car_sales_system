@@ -798,7 +798,7 @@ class car_sales_system(http.server.BaseHTTPRequestHandler):
         cursor.execute('''
             select brand, model, quantity, (SELECT SUM(amount) FROM financials WHERE transaction_type = '卖出' AND date = date('now') AND financials.vehicle_id = vehicles.id), (SELECT SUM(amount) FROM financials WHERE transaction_type = '卖出' AND strftime('%Y-%m', date) = strftime('%Y-%m', 'now') AND financials.vehicle_id = vehicles.id)
             from inventory, vehicles, financials
-            where transaction_type = '卖出' and vehicles.id = inventory.vehicle_id and vehicles.id = financials.vehicle_id
+            where vehicles.id = inventory.vehicle_id and vehicles.id = financials.vehicle_id
         ''')
         raw = cursor.fetchall()
         conn.close()
