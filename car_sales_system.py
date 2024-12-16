@@ -985,7 +985,7 @@ class car_sales_system(http.server.BaseHTTPRequestHandler):
             self.end_headers()
             self.wfile.write(self.generate_error_html(errorCode, errorMsg, buttons))
         else:
-            self.wfile.write(errorMsg)
+            self.wfile.write(str(errorMsg).encode('utf-8'))
 
     # 检查登录
     def check_login(self, username, password):
