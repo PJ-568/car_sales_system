@@ -154,6 +154,7 @@ class car_sales_system(http.server.BaseHTTPRequestHandler):
         conn, cursor = connect_to_database()
         try:
             cursor.execute(command)
+            conn.commit()
             raw = cursor.fetchall()
             result = '运行结果：<br><table><tbody>'
             for i in raw:
@@ -164,10 +165,8 @@ class car_sales_system(http.server.BaseHTTPRequestHandler):
             result += '</tbody></table>'
         except Exception as e:
             conn.rollback()  # 回滚事务
-            result = f'数据库操作失败: {str(e)}<br>数据库输出：{str(cursor.fetchall())}<br>操作已回滚。'
-            self.send_msg_error(500, result, "", False)
+            result = f'数据库操作失败: {str(e)}<br>操作已回滚。'
             print(result)
-            conn.close()
         finally:
             conn.close()
         return result
@@ -983,7 +982,7 @@ class car_sales_system(http.server.BaseHTTPRequestHandler):
             self.send_header('Content-type', 'text/html; charset=utf-8')
             self.send_header('Cache-Control', 'public, max-age=5')
             self.end_headers()
-            self.wfile.write(self.generate_error_html(errorCode, errorMsg, buttons))
+            self.wfile.write(self.generate_error_html(errorCode, str(errorMsg).encode('utf-8'), buttons))
         else:
             self.wfile.write(str(errorMsg).encode('utf-8'))
 
